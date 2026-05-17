@@ -130,29 +130,72 @@ PROCÉDURES APPLICABLES:
 
 ESCALADE: {"OUI - traitement prioritaire" if state["should_escalate"] else "NON"}
 
-Génère UNIQUEMENT le corps du message (sans sujet), empathique et clair, max 150 mots."""
-    
+Tu dois aussi classifier la demande du client dans une seule des catégories suivantes:
+- suivi de colis
+- perte de colis
+- suivi de courrier
+- perte de courrier
+- demande de renseignement
+- achat de produit de la poste
+
+Retourne exactement ce format:
+
+SUJET_DEMANDE: <une seule valeur parmi: suivi de colis, perte de colis, suivi de courrier, perte de courrier, demande de renseignement, achat de produit de la poste>
+REPONSE: <brouillon de réponse professionnel>
+
+"""
+    # Valeurs par défaut robustes: utilisées si le LLM échoue
+    request_subject = "inconnu"
+    draft_subject = "Nous traitons votre demande"
+    draft_body = (
+        f"Bonjour {customer_name},\n\n"
+        "Nous avons bien reçu votre demande et nous la traitons."
+    )
+
     try:
-        draft_body = llm.generate_response(prompt)
-        draft_subject = "Nous traitons votre réclamation - La Poste"
+        llm_output = llm.generate_response(prompt).strip()
+
+        lines = llm_output.splitlines()
+        draft_body_lines = []
+        capture_response = False
+
+        for line in lines:
+            normalized = line.strip()
+            upper = normalized.upper()
+            if upper.startswith("SUJET_DEMANDE:"):
+                request_subject = normalized.split(":", 1)[1].strip() or "inconnu"
+            elif upper.startswith("REPONSE:"):
+                capture_response = True
+                # Capture le reste de la ligne après "REPONSE:"
+                remainder = normalized.split(":", 1)[1].strip()
+                if remainder:
+                    draft_body_lines.append(remainder)
+            elif capture_response:
+                # Continue à capturer les lignes suivantes
+                draft_body_lines.append(line.rstrip())
+
+        if draft_body_lines:
+            draft_body = "\n".join(draft_body_lines).strip()
+
     except Exception as e:
         state["errors"].append(f"Erreur LLM: {str(e)}")
-        draft_subject = "Nous traitons votre réclamation"
-        draft_body = f"Bonjour {customer_name},\n\nNous avons bien reçu votre demande et nous la traitons."
     
     state["draft_response"] = DraftResponse(
         subject=draft_subject,
         body=draft_body,
         sources=state["rag_sources"],
-        confidence=0.85
+        confidence=0.85,
     )
-    
+        
+    state["request_subject"] = request_subject
+
     state["audit_log"].append({
         "step": "draft_response",
         "timestamp": datetime.now().isoformat(),
         "confidence": 0.85,
         "llm_used": "mistral-small"
     })
+    
     return state
 
 def build_workflow():

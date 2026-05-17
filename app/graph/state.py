@@ -29,6 +29,7 @@ class AgentState(TypedDict):
     
     # Proposition réponse
     draft_response: Optional[DraftResponse]
+    request_subject: Optional[str]
     
     # Décision escalade
     should_escalate: bool
