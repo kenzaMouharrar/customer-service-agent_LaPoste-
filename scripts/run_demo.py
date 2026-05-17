@@ -33,6 +33,7 @@ def build_initial_state(event: dict) -> dict:
         "rag_sources": [],
         "draft_response": None,
         "request_subject": "",
+        "missing_data": False,
         "should_escalate": False,
         "escalate_reason": "",
         "escalate_to": None,
@@ -99,6 +100,9 @@ def run_one(event_path: Path, verbose: bool = True) -> tuple[dict, dict]:
         print("\n--- request subject ---", flush=True)
         print(result["request_subject"], flush=True)
 
+        print("\n--- Donnees manquantes ---", flush=True)
+        print(result["missing_data"], flush=True)
+
         print("\n--- Audit ---", flush=True)
         for step in result["audit_log"]:
             print(step, flush=True)
@@ -117,6 +121,7 @@ def print_summary_table(rows: list[dict]) -> None:
         "scenario",
         "type_evenement",
         "request_subject",
+        "donnees_manquantes",
         "ticket",
         "escalade",
         "vers",
@@ -151,6 +156,7 @@ def run_batch(files: list[Path], verbose: bool) -> None:
                 "scenario": event_path.name,
                 "type_evenement": event.get("event_type_resolved", "inconnu"),
                 "request_subject": result["request_subject"],
+                "donnees_manquantes": "TRUE" if result["missing_data"] else "FALSE",
                 "ticket": "YES" if result["should_create_ticket"] else "NO",
                 "escalade": "YES" if result["should_escalate"] else "NO",
                 "vers": result["escalate_to"] or "-",

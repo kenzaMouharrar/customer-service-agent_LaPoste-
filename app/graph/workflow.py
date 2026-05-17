@@ -1,11 +1,54 @@
 from langgraph.graph import StateGraph
 from datetime import datetime
 from pathlib import Path
+import re
 from app.graph.state import AgentState
 from app.models.schemas import DraftResponse
 from app.services.crm_mock import CRMMock
 
 crm = CRMMock()
+
+
+def _is_email_channel(channel: str) -> bool:
+    return channel in ["email_claim", "email_general"]
+
+
+def _has_tracking_or_reference(text: str) -> bool:
+    lowered = text.lower()
+    has_keyword = any(
+        keyword in lowered
+        for keyword in ["numero", "numéro", "suivi", "reference", "référence", "colis", "courrier"]
+    )
+    has_id_pattern = re.search(r"\b[a-zA-Z0-9]{10,20}\b", text) is not None
+    return has_keyword and has_id_pattern
+
+
+def _has_context_details(text: str) -> bool:
+    lowered = text.lower()
+    has_date = re.search(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b", text) is not None
+    has_place = any(keyword in lowered for keyword in ["adresse", "ville", "bureau", "agence"])
+    return has_date or has_place
+
+
+def _compute_missing_data(channel: str, request_subject: str, body: str) -> bool:
+    if not _is_email_channel(channel):
+        return False
+
+    subject = (request_subject or "").lower()
+    body_lower = (body or "").lower()
+    related_to_tracking = subject in [
+        "suivi de colis",
+        "perte de colis",
+        "suivi de courrier",
+        "perte de courrier",
+    ] or any(keyword in body_lower for keyword in ["colis", "courrier", "suivi", "perdu", "perte"])
+
+    if not related_to_tracking:
+        return False
+
+    enough_identifiers = _has_tracking_or_reference(body)
+    enough_context = _has_context_details(body)
+    return not (enough_identifiers and enough_context)
 
 def node_ingest(state: AgentState) -> AgentState:
     """Ingestion: normalise l'événement entrant"""
@@ -179,6 +222,12 @@ REPONSE: <brouillon de réponse professionnel>
 
     except Exception as e:
         state["errors"].append(f"Erreur LLM: {str(e)}")
+
+    state["missing_data"] = _compute_missing_data(
+        state["channel"],
+        request_subject,
+        state["body"],
+    )
     
     state["draft_response"] = DraftResponse(
         subject=draft_subject,
@@ -193,7 +242,8 @@ REPONSE: <brouillon de réponse professionnel>
         "step": "draft_response",
         "timestamp": datetime.now().isoformat(),
         "confidence": 0.85,
-        "llm_used": "mistral-small"
+        "llm_used": "mistral-small",
+        "missing_data": state["missing_data"],
     })
     
     return state
