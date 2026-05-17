@@ -7,6 +7,10 @@ dependencies = [
     "langgraph>=0.0.1",
     "mistralai>=1.0.0,<2.0.0",
     "python-dotenv>=1.0.0",
+    "faiss-cpu>=1.7.4",
+    "whoosh>=2.7.4",
+    "numpy>=1.24.0",
+    "sentence-transformers>=3.0.0",
 ]
 
 [build-system]

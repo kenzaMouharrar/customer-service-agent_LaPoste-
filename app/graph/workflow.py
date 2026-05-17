@@ -101,20 +101,31 @@ def node_load_crm_context(state: AgentState) -> AgentState:
     return state
 
 def node_retrieve_rag(state: AgentState) -> AgentState:
-    """RAG: récupère les procédures pertinentes"""
+    """RAG hybride: BM25 + FAISS sur les documents .md La Poste"""
     state["current_step"] = "retrieve_rag"
-    
-    rag_path = Path("data/rag_docs/procedures_colis.md")
-    if rag_path.exists():
-        with open(rag_path, "r") as f:
-            content = f.read()
-            state["rag_documents"].append(content)
-            state["rag_sources"].append("procedures_colis.md")
-    
+
+    query = f"{state['subject']}\n{state['body']}"
+
+    try:
+        from app.rag.retriever import retriever
+        docs = retriever.retrieve(query=query, top_k=3)
+        state["rag_documents"] = [doc["text"] for doc in docs]
+        state["rag_sources"] = list(
+            dict.fromkeys(doc["metadata"]["source"] for doc in docs)
+        )
+    except RuntimeError as e:
+        # Index pas encore construit → fallback sur lecture brute
+        state["errors"].append(f"RAG non indexé: {e}")
+        rag_path = Path("data/rag_docs/procedures_colis.md")
+        if rag_path.exists():
+            state["rag_documents"] = [rag_path.read_text(encoding="utf-8")]
+            state["rag_sources"] = ["procedures_colis.md"]
+
     state["audit_log"].append({
         "step": "retrieve_rag",
         "timestamp": datetime.now().isoformat(),
-        "documents_retrieved": len(state["rag_documents"])
+        "documents_retrieved": len(state["rag_documents"]),
+        "sources": state["rag_sources"],
     })
     return state
 
