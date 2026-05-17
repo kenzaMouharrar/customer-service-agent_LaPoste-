@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_004_general",
+  "event_type": "mail_general",
+  "timestamp": "2026-05-17T11:00:00Z",
+  "channel": "email_general",
+  "customer_email": "karim.benali@email.fr",
+  "subject": "Question livraison",
+  "body": "Bonjour, je veux connaitre le delai moyen de livraison.",
+  "attachments": []
+}

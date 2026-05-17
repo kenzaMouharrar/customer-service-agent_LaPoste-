@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_007_info",
+  "event_type": "demande_info",
+  "timestamp": "2026-05-17T11:45:00Z",
+  "channel": "email_general",
+  "customer_email": "karim.benali@email.fr",
+  "subject": "Demande d information",
+  "body": "Pouvez-vous me donner les horaires du bureau de poste svp?",
+  "attachments": []
+}
