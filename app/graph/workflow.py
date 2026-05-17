@@ -51,12 +51,29 @@ def _compute_missing_data(channel: str, request_subject: str, body: str) -> bool
     return not (enough_identifiers and enough_context)
 
 def node_ingest(state: AgentState) -> AgentState:
-    """Ingestion: normalise l'événement entrant"""
+    """Ingestion: normalise l'événement entrant + calcul retard"""
+    from datetime import datetime
+    
     state["current_step"] = "ingest"
+    
+    # Calcul du retard (différence en heures)
+    try:
+        event_time = datetime.fromisoformat(state["timestamp"].replace("Z", "+00:00"))
+        now = datetime.now(event_time.tzinfo) if event_time.tzinfo else datetime.now()
+        elapsed = (now - event_time).total_seconds() / 3600  # en heures
+        state["time_elapsed_hours"] = round(elapsed, 2)
+        state["retard"] = elapsed > 24  # Seuil = 24 heures
+    except Exception as e:
+        state["errors"].append(f"Erreur calcul retard: {e}")
+        state["time_elapsed_hours"] = 0.0
+        state["retard"] = False
+    
     state["audit_log"].append({
         "step": "ingest",
         "timestamp": datetime.now().isoformat(),
-        "detail": f"Événement reçu: {state['event_id']}"
+        "detail": f"Événement reçu: {state['event_id']}",
+        "time_elapsed_hours": state["time_elapsed_hours"],
+        "retard": state["retard"],
     })
     return state
 

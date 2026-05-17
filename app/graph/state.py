@@ -38,6 +38,10 @@ class AgentState(TypedDict):
     escalate_reason: str
     escalate_to: Optional[str]  # back_office, direction, superviseur
     
+    # Analyse temporelle
+    time_elapsed_hours: float  # Différence en heures entre timestamp et maintenant
+    retard: bool  # True si time_elapsed_hours > seuil_retard (24h par défaut)
+    
     # Audit et logs
     audit_log: List[dict]
     errors: List[str]

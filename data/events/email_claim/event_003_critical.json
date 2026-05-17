@@ -1,6 +1,6 @@
 {
 "event_id": "evt_003_critical",
-"timestamp": "2026-05-17T10:30:00Z",
+"timestamp": "2026-05-16T10:30:00Z",
 "channel": "email_claim",
 "customer_email": "sophie.leroy@email.fr",
 "subject": "Reclamation urgente - mise en demeure",

@@ -37,6 +37,8 @@ def build_initial_state(event: dict) -> dict:
         "should_escalate": False,
         "escalate_reason": "",
         "escalate_to": None,
+        "time_elapsed_hours": 0.0,
+        "retard": False,
         "audit_log": [],
         "errors": [],
     }
@@ -84,6 +86,7 @@ def run_one(event_path: Path, verbose: bool = True) -> tuple[dict, dict]:
         print(f"Type evenement: {event_type}", flush=True)
         print(f"Decision ticket: {result['should_create_ticket']}", flush=True)
         print(f"Raison ticket: {result['ticket_creation_reason']}", flush=True)
+        print(f"Temps écoulé: {result['time_elapsed_hours']}h | Retard: {result['retard']}", flush=True)
         print(f"Escalade: {result['should_escalate']} -> {result['escalate_to']}", flush=True)
         print(f"Motif escalade: {result['escalate_reason']}", flush=True)
 
@@ -121,6 +124,8 @@ def print_summary_table(rows: list[dict]) -> None:
         "scenario",
         "type_evenement",
         "request_subject",
+        "time_elapsed_h",
+        "retard",
         "donnees_manquantes",
         "ticket",
         "escalade",
@@ -156,6 +161,8 @@ def run_batch(files: list[Path], verbose: bool) -> None:
                 "scenario": event_path.name,
                 "type_evenement": event.get("event_type_resolved", "inconnu"),
                 "request_subject": result["request_subject"],
+                "time_elapsed_h": f"{result['time_elapsed_hours']:.1f}h",
+                "retard": "OUI" if result["retard"] else "NON",
                 "donnees_manquantes": "TRUE" if result["missing_data"] else "FALSE",
                 "ticket": "YES" if result["should_create_ticket"] else "NO",
                 "escalade": "YES" if result["should_escalate"] else "NO",

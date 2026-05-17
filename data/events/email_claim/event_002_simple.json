@@ -1,6 +1,6 @@
 {
 "event_id": "evt_002_simple",
-"timestamp": "2026-05-17T10:15:00Z",
+"timestamp": "2026-05-15T10:15:00Z",
 "channel": "email_general",
 "customer_email": "karim.benali@email.fr",
 "subject": "Question delai livraison",
