@@ -1,0 +1,9 @@
+{
+"event_id": "evt_001",
+"timestamp": "2026-05-17T10:00:00Z",
+"channel": "email_claim",
+"customer_email": "nadia.martin@email.fr",
+"subject": "Reclamation - colis non recu",
+"body": "Bonjour, mon colis n'est toujours pas arrive. C'est urgent, merci de verifier.",
+"attachments": []
+}

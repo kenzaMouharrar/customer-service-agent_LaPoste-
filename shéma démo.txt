@@ -1,0 +1,45 @@
+[Simulateur Power Automate]
+        |
+        v
+[Event Bus local / Queue JSON]
+        |
+        v
+[LangGraph Orchestrator]
+  |        |         |
+  |        |         +--> [RAG Retriever (docs procédures)]
+  |        +------------> [CRM Simulé (fiches + historique)]
+  +---------------------> [Ticketing Simulé (create/update/status)]
+        |
+        v
+[Console Conseiller (UI)]
+  - Voir proposition
+  - Modifier
+  - Envoyer
+  - Escalader
+        |
+        v
+[Audit / Timeline de décision]
+
+contrat d'ENTRÉE
+{
+  "event_id": "evt_001",
+  "channel": "email_general|email_claim|form|call",
+  "timestamp": "2026-05-16T10:00:00Z",
+  "customer": {"email": "x@exemple.fr", "phone": "0612345678"},
+  "payload": {
+    "subject": "Mon colis est perdu",
+    "body": "Texte client...",
+    "attachments": []
+  },
+  "metadata": {"source": "power_automate_sim"}
+}
+contrat de sortie 
+{
+  "ticket_id": "T-2026-0042",
+  "classification": "colis_perdu",
+  "confidence": 0.86,
+  "recommended_action": "open_investigation",
+  "draft_reply": "Bonjour ...",
+  "rag_sources": ["procedure_colis_perdu_v2", "sla_reclamations"],
+  "choices": ["modify", "send", "escalate", "request_info"]
+}

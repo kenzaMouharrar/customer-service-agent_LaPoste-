@@ -1,0 +1,176 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                           CANAUX D'ENTRÉE MULTICANAUX                          ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                ║
+║  📧 EMAIL GÉNÉRIQUE      📧 EMAIL RÉCLAMATION      📋 FORMULAIRE WEB           ║
+║  contact@laposte.fr      reclamations@laposte.fr   (site web)                 ║
+║        │                        │                       │                      ║
+║        └────────────┬───────────┘                       │                      ║
+║                     │                                    │                      ║
+║             Exchange Online                      Web Server                    ║
+║             (Microsoft 365)                      (API)                         ║
+║                                                                                ║
+║  📞 APPEL TÉLÉPHONIQUE (optionnel ultérieurement)                              ║
+║  Contact Center / IVR                                                          ║
+║        │                                                                        ║
+║  Transcription audio + Métadonnées appel                                       ║
+║        │                                                                        ║
+╚════════┼────────────┬────────────┬─────────────────────────────────────────────╝
+         │            │            │
+         ▼            ▼            ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    COUCHE D'INTÉGRATION & ORCHESTRATION                         │
+│                                                                                 │
+│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐    │
+│  │  POWER AUTOMATE     │  │  POWER AUTOMATE     │  │  POWER AUTOMATE     │    │
+│  │  Flow 1: Email Gen  │  │  Flow 2: Email Rclm │  │  Flow 3: Formulaire │    │
+│  │                     │  │                     │  │                     │    │
+│  │ • Normalise email   │  │ • Normalise email   │  │ • Parse formulaire  │    │
+│  │ • Détecte doublon   │  │ • Priorité haute    │  │ • Valide champs     │    │
+│  │ • Appel LangGraph   │  │ • Appel LangGraph   │  │ • Appel LangGraph   │    │
+│  └──────────┬──────────┘  └──────────┬──────────┘  └──────────┬──────────┘    │
+│             │                        │                        │                │
+│             └────────────┬───────────┘                        │                │
+│                          │                                     │                │
+│  ┌──────────────────────────────────────────────────────────────────────────┐  │
+│  │                  NORMALISATION & SANITISATION                           │  │
+│  │                                                                          │  │
+│  │  • Encodage (UTF-8)                                                    │  │
+│  │  • Supprimer signatures email & HTML                                   │  │
+│  │  • Détecter langage (FR/EN)                                            │  │
+│  │  • Valider schema (email, sujet, corps présents)                       │  │
+│  │  • Générer correlation_id unique                                       │  │
+│  │  • Horodater l'événement                                               │  │
+│  └──────────────────────────┬───────────────────────────────────────────────┘  │
+│                             │                                                  │
+│                             ▼                                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────┐  │
+│  │          EVENT BUS LOCAL / QUEUE (Azure Service Bus)                    │  │
+│  │                                                                          │  │
+│  │  Événement JSON standardisé:                                            │  │
+│  │  {                                                                       │  │
+│  │    event_id, channel, customer_email, subject, body,                   │  │
+│  │    attachments, timestamp, correlation_id                              │  │
+│  │  }                                                                       │  │
+│  └──────────────────────────┬───────────────────────────────────────────────┘  │
+│                             │                                                  │
+└─────────────────────────────┼──────────────────────────────────────────────────┘
+                              │
+                              ▼
+              ┌───────────────────────────────┐
+              │    LANGGRAPH ORCHESTRATOR     │
+              │  (Azure App Service / AKS)   │
+              └───────────────────┬───────────┘
+                                  │
+        ┌─────────────────────────┼──────────────────────────┐
+        │                         │                          │
+        ▼                         ▼                          ▼
+   ┌─────────────┐        ┌──────────────┐        ┌─────────────────┐
+   │  NŒUD 1     │        │  NŒUD 2      │        │  NŒUD 3         │
+   │  INGESTION  │───────→│  NORMALISE   │───────→│  DÉCISION       │
+   │             │        │  + DÉDUP.    │        │  TICKET         │
+   └─────────────┘        └──────────────┘        └────────┬────────┘
+                                                           │
+                          ┌────────────────────────────────┘
+                          │
+        ┌─────────────────▼────────────────┬──────────────────┐
+        │                                  │                  │
+        ▼                                  ▼                  ▼
+   ┌──────────────┐               ┌───────────────┐     ┌──────────────┐
+   │ NŒUD 4       │               │  NŒUD 5       │     │  NŒUD 6      │
+   │ LOAD CRM     │              │  RETRIEVE RAG │     │  CHECK       │
+   │ (Dynamics)   │              │  (Procédures) │     │  ESCALADE    │
+   └──────┬───────┘              └───────┬───────┘     └──────┬───────┘
+          │                              │                    │
+          └──────────────┬───────────────┘                    │
+                         │                                     │
+                         ▼                                     │
+                  ┌──────────────────┐                        │
+                  │ NŒUD 7           │◄───────────────────────┘
+                  │ DRAFT RESPONSE   │
+                  │ (LLM Mistral)    │
+                  └────────┬─────────┘
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │ NŒUD 8           │
+                  │ HUMAN REVIEW     │
+                  │ GATE             │
+                  └────────┬─────────┘
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+        ▼                                     ▼
+   ┌─────────────┐                    ┌─────────────┐
+   │ NŒUD 9      │                    │ NŒUD 10     │
+   │ UPDATE      │                    │ AUDIT +     │
+   │ SYSTEMS     │                    │ CLÔTURE     │
+   └─────────────┘                    └─────────────┘
+        │
+        ├─────────────────────────┬────────────────────────┐
+        │                         │                        │
+        ▼                         ▼                        ▼
+   ┌──────────────┐         ┌──────────────┐      ┌─────────────────┐
+   │ OUTIL        │         │ DYNAMICS     │      │ LOGS / AUDIT    │
+   │ INTERNE      │         │ 365          │      │ (Application    │
+   │ TICKETING    │         │ (Log         │      │  Insights)      │
+   │              │         │  interaction)│      │                 │
+   │ • Ticket ID  │         └──────────────┘      └─────────────────┘
+   │ • Status     │
+   │ • Réponse    │
+   │ • Notes      │
+   └──────────────┘
+        ▲
+        │
+   ┌────┴──────────────────────────────────────────────┐
+   │                                                   │
+   │  CONSEILLER TRAVAILLE UNIQUEMENT DANS OUTIL      │
+   │  - Valide/modifie brouillon réponse              │
+   │  - Choisit: Envoyer / Escalader / Demander infos │
+   │  - Voit audit complet des décisions IA           │
+   │                                                   │
+   └───────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                      SOURCES DE DONNÉES EXTERNES (APIs)                        ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                ║
+║  1. TRACKING COLIS                                                             ║
+║     └─ Numéro suivi → Statut en temps réel (JJ+3 avant livraison attendue)    ║
+║                                                                                ║
+║  2. HISTORIQUE CLIENT (CRM Dynamics)                                           ║
+║     └─ Email/Téléphone → Fiche client, tickets passés, segment                ║
+║                                                                                ║
+║  3. BASE DE PROCÉDURES (RAG Local)                                             ║
+║     └─ Mots-clés → Procédure applicable (colis perdu, avarie, courrier)       ║
+║                                                                                ║
+║  4. RÈGLES INDEMNISATION (Moteur règles)                                       ║
+║     └─ Type + montant + délai → Éligibilité, montant max                      ║
+║                                                                                ║
+║  5. SLA / ESCALADE CRITÈRES (Base config)                                      ║
+║     └─ Type ticket + client premium → Seuils escalade, délais                 ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                           FLUX DE SORTIE (DÉCISIONS)                           ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                ║
+║  1. CRÉER TICKET OUI/NON                                                       ║
+║     └─ Si oui: Outil interne crée ticket avec classification auto             ║
+║                                                                                ║
+║  2. BROUILLON RÉPONSE + CONFIDENCE                                             ║
+║     └─ Corps + Sujet + Sources utilisées + Score 0-1                          ║
+║                                                                                ║
+║  3. ESCALADE RECOMMANDÉE OUI/NON                                               ║
+║     └─ Si oui: Vers (back-office / direction / superviseur) + motif           ║
+║                                                                                ║
+║  4. ACTIONS MÉTIER PROPOSÉES                                                   ║
+║     └─ Enquête transport / Indemnisation / Réexpédition / Info manquante       ║
+║                                                                                ║
+║  5. JOURNAL DÉCISION (AUDIT TRACE)                                             ║
+║     └─ Chaque étape loggée + sources consultées + score de confiance          ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝

@@ -1,0 +1,106 @@
+                         ENTRÉE
+                    (événement JSON)
+                           │
+                    ┌──────▼──────┐
+                    │  INGESTION  │──────► STOP (doublon détecté)
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────────┐
+                    │ NORMALISATION   │
+                    │ + VALIDATION    │
+                    │ SCHÉMA          │
+                    └──────┬──────────┘
+                           │
+              ┌────────────▼────────────┐
+              │   ROUTAGE PAR CANAL      │
+              └───┬─────────┬───────────┘
+                  │         │         │         │
+              email      email     formulaire  appel
+            général   réclamation      │         │
+                  │         │          │         │
+              ┌───▼─────────▼──┐       │         │
+              │DÉCISION TICKET │       │         │
+              │Créer? OUI/NON  │       │         │
+              └───┬────────┬───┘       │         │
+                  │OUI     │NON        │         │
+          ┌───────▼──┐  ┌──▼──────┐   │         │
+          │  CRÉER   │  │  FIN    │   │         │
+          │  TICKET  │  │(email   │   │         │
+          │  outil   │  │simple)  │   │         │
+          │ interne  │  └─────────┘   │         │
+          └───────┬──┘                │         │
+                  │◄──────────────────┘         │
+                  │◄────────────────────────────┘
+                  │  (ticket déjà existant pour form/appel)
+                  │
+           ┌──────▼──────────────┐
+           │  LECTURE CONTEXTE   │
+           │  • Fiche client     │
+           │    Dynamics 365     │
+           │  • Tickets passés   │
+           │    outil interne    │
+           └──────┬──────────────┘
+                  │
+           ┌──────▼──────────────┐
+           │  CLASSIFICATION     │
+           │  + EXTRACTION       │
+           │  (LLM Azure OpenAI) │
+           └──────┬──────────────┘
+                  │
+           ┌──────▼──────────────┐
+           │  VALIDATION DONNÉES │
+           └──┬──────────────────┘
+              │                  │
+          Complet             Incomplet
+              │                  │
+              │           ┌──────▼────────────┐
+              │           │ DEMANDE INFO       │
+              │           │ MANQUANTE          │
+              │           │ (email auto client)│
+              │           └────────────────────┘
+              │
+       ┌──────▼──────────────────┐
+       │  ENRICHISSEMENT         │
+       │  • API tracking colis   │
+       │  • Historique client    │
+       │  • Base procédures      │
+       │  • Règles indemnisation │
+       └──────┬──────────────────┘
+              │
+       ┌──────▼──────────────────┐
+       │  SCORING / DÉCISION     │
+       └──┬──────────┬───────────┘
+          │          │           │
+     Confiance   Confiance   Cas sensible
+      élevée      faible      escalade
+          │          │           │
+   ┌──────▼──┐  ┌────▼──────┐ ┌─▼──────────────┐
+   │RÉDACTION│  │  HUMAN    │ │   ESCALADE     │
+   │BROUILLON│  │  REVIEW   │ │back-office /   │
+   │RÉPONSE  │  │(conseiller│ │direction       │
+   └──────┬──┘  │ examine)  │ └─────────────────┘
+          │     └────┬──────┘
+          └──────────┘
+                │
+       ┌────────▼───────────────┐
+       │  VALIDATION CONSEILLER │  ◄── OBLIGATOIRE avant envoi
+       │  (dans outil interne)  │
+       └────┬───────────────────┘
+            │           │           │
+        Approuvé     Modifié     Rejeté
+            │           │           │
+            └─────┬─────┘           │
+                  │                 │
+       ┌──────────▼──────────┐      │
+       │  MISE À JOUR        │   ┌──▼───────────────┐
+       │  • Outil interne:   │   │ RETOUR NŒUD      │
+       │    statut, réponse  │   │ RÉDACTION        │
+       │  • Dynamics:        │   │ (reformulation)  │
+       │    log interaction  │   └──────────────────┘
+       └──────────┬──────────┘
+                  │
+       ┌──────────▼──────────┐
+       │  AUDIT + CLÔTURE    │
+       │  Journal décisions  │
+       │  IA dans ticket     │
+       └─────────────────────┘

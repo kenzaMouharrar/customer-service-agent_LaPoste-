@@ -1,0 +1,4 @@
+Flux choisi: email réclamation
+Résultat attendu: ticket créé automatiquement
+Assistance agent: proposition de réponse avec contexte CRM simulé + RAG
+Action conseiller: modifier, envoyer ou escalader

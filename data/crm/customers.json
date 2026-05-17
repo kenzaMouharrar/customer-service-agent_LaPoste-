@@ -1,0 +1,29 @@
+[
+{
+"customer_id": "CLI-1001",
+"name": "Nadia Martin",
+"email": "nadia.martin@email.fr",
+"phone": "0611223344",
+"segment": "standard",
+"city": "Lyon",
+"known_issues_count": 2
+},
+{
+"customer_id": "CLI-1002",
+"name": "Karim Benali",
+"email": "karim.benali@email.fr",
+"phone": "0677889900",
+"segment": "premium",
+"city": "Paris",
+"known_issues_count": 0
+},
+{
+"customer_id": "CLI-1003",
+"name": "Sophie Leroy",
+"email": "sophie.leroy@email.fr",
+"phone": "0600112233",
+"segment": "standard",
+"city": "Marseille",
+"known_issues_count": 4
+}
+]
