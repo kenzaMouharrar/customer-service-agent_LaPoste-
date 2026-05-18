@@ -2,6 +2,7 @@
 "event_id": "evt_003_critical",
 "timestamp": "2026-05-16T10:30:00Z",
 "channel": "email_claim",
+"customer_name": "Sophie Leroy",
 "customer_email": "sophie.leroy@email.fr",
 "subject": "Reclamation urgente - mise en demeure",
 "body": "Bonjour, mon colis est perdu depuis plusieurs jours. C'est urgent. Je contacte mon avocat et je saisis le tribunal si je n'ai pas de reponse immediate.",

@@ -3,6 +3,7 @@
   "event_type": "appel",
   "timestamp": "2026-05-17T11:30:00Z",
   "channel": "call",
+  "customer_name": "Sophie Leroy",
   "customer_email": "sophie.leroy@email.fr",
   "subject": "Compte rendu appel",
   "body": "Appel client: colis perdu, demande de suivi urgent.",

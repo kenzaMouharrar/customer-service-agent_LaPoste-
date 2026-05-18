@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_008",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "channel": "email_claim",
+  "customer_name": "Nadia Martin",
+  "customer_email": "nadia.martin@email.fr",
+  "subject": "suivi - Reclamation - colis non recu",
+  "body": "Bonjour, quel est le statut?",
+  "attachments": []
+}

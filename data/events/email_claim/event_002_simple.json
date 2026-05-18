@@ -2,6 +2,7 @@
 "event_id": "evt_002_simple",
 "timestamp": "2026-05-15T10:15:00Z",
 "channel": "email_general",
+"customer_name": "Karim Benali",
 "customer_email": "karim.benali@email.fr",
 "subject": "Question delai livraison",
 "body": "Bonjour, je souhaite juste connaitre le delai moyen de livraison pour un colis standard. Merci.",

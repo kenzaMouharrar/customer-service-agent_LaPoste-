@@ -1,0 +1,10 @@
+{
+  "event_id": "evt_008",
+  "timestamp": "2026-04-17T10:00:00Z",
+  "channel": "call",
+  "customer_name": "Lola Bobet",
+  "customer_email": "lola.bobet@email.fr",
+  "subject": "banque postale",
+  "body": "Bonjour, est ce que je peux ouvrir un compte pour mon enfant?",
+  "attachments": []
+}
