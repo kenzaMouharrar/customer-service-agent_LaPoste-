@@ -4,6 +4,7 @@
   "event_type": "ticket",
   "timestamp": "2026-05-17T11:15:00Z",
   "channel": "form",
+  "customer_name": "Nadia Martin",
   "customer_email": "nadia.martin@email.fr",
   "subject": "Formulaire reclamation colis",
   "body": "Colis non recu, je depose une reclamation via formulaire.",
