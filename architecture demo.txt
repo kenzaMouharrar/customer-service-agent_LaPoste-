@@ -1,0 +1,21 @@
+Incoming Event
+Events JSON mockés
+   |
+   v
+AgentState  <-----------------------------------------------+
+   |                                                        |
+   |                                                        |
+   +--> CRM Mock ----------------> customer_context         |
+   |                         +--> customer_history          |
+   |                                                        |
+   +--> Hybrid RAG Retriever ------------------------------+
+   |     |                                                  |
+   |     +--> chunks.jsonl                                  |
+   |     +--> bm25 index                                    |
+   |     +--> faiss index                                   |
+   |     +--> rag_sources / rag_documents                   |
+   |                                                        |
+   +--> Mistral LLM --------------------------------------->+
+         |
+         +--> request_subject
+         +--> draft_response.body
